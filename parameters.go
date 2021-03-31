@@ -11,8 +11,11 @@ import (
 // and sets them into `parameters` by matching JSON struct tags
 // to parameter slugs.
 //
-// It expects that your task has been configured with a CLI arguments
-// template value of `{{.JSON}}`. It will error otherwise.
+// This expects that the first CLI argument to your task is a JSON document
+// containing parameter slugs mapped to parameter values. This is done by
+// setting the `arguments` field of the task to `{{.JSON}}`.
+//
+// Docs: https://docs.airplane.dev/reference/parameters
 func Parameters(parameters interface{}) error {
 	args := os.Args[1:]
 	if len(args) != 1 {

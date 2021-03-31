@@ -15,8 +15,8 @@ func init() {
 	trap.Timeout = 10 * time.Second
 }
 
-// Run wraps provides your task with context-cancellation and
-// error-handling logic. Any errors returned, or bubbled up via
+// Run provides your task with context-cancellation and
+// error-handling. Any errors returned, or bubbled up via
 // a panic, will be logged as Airplane outputs.
 func Run(f func(ctx context.Context) error) {
 	// Handles task cancellation by cancelling the provided context.
