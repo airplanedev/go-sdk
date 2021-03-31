@@ -17,13 +17,13 @@ import (
   "context"
   "fmt"
 
-	airplane "github.com/airplanedev/go-sdk"
+  airplane "github.com/airplanedev/go-sdk"
 )
 
 func main() {
-	airplane.Run(func(ctx context.Context) error {
+  airplane.Run(func(ctx context.Context) error {
     var parameters struct {
-      Name   string `json:"name"`
+      Name string `json:"name"`
     }
     if err := airplane.Parameters(&parameters); err != nil {
       return err
