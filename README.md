@@ -1,4 +1,4 @@
-# Airplane Go SDK ![CI status](https://img.shields.io/github/workflow/status/airplanedev/go-sdk/test/main) ![License](https://img.shields.io/github/license/airplanedev/go-sdk) ![GitHub tag (latest SemVer)](https://img.shields.io/github/v/tag/airplanedev/go-sdk)
+# Airplane Go SDK [![Docs](https://img.shields.io/github/v/tag/airplanedev/go-sdk?label=docs)](https://pkg.go.dev/github.com/airplanedev/go-sdk) [![License](https://img.shields.io/github/license/airplanedev/go-sdk)](https://github.com/airplanedev/go-sdk/blob/main/LICENSE) [![CI status](https://img.shields.io/github/workflow/status/airplanedev/go-sdk/test/main)](https://github.com/airplanedev/go-sdk/actions?query=branch%3Amain)
 
 Go SDK for writing Airplane.dev tasks.
 
