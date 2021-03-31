@@ -25,13 +25,15 @@ func Run(f func(ctx context.Context) error) {
 	// Handle uncaught panics.
 	defer func() {
 		if r := recover(); r != nil {
-			MustNamedOutput("error", fmt.Sprintf("%+v", r))
+			fmt.Fprintf(os.Stderr, "%+v\n", r)
+			MustNamedOutput("error", "An error occurred. Check the task logs for more details.")
 			os.Exit(1)
 		}
 	}()
 
 	if err := f(ctx); err != nil {
-		MustNamedOutput("error", fmt.Sprintf("%+v", err))
+		fmt.Fprintf(os.Stderr, "%+v\n", err)
+		MustNamedOutput("error", "An error occurred. Check the task logs for more details.")
 		os.Exit(1)
 	}
 }
