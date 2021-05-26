@@ -23,17 +23,24 @@ func Run(f func(ctx context.Context) error) {
 	ctx := trap.Context()
 
 	// Handle uncaught panics.
+	errMsg := fmt.Sprintf("View the task logs for more details: app.airplane.dev/tasks/%s", os.Getenv("AIRPLANE_TASK_ID"))
 	defer func() {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "%+v\n", r)
-			MustNamedOutput("error", "An error occurred. Check the task logs for more details.")
+			if err, ok := r.(error); ok {
+				MustNamedOutput("error", err.Error())
+			} else {
+				MustNamedOutput("error", fmt.Sprintf("%s", r))
+			}
+			MustNamedOutput("error", errMsg)
 			os.Exit(1)
 		}
 	}()
 
 	if err := f(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
-		MustNamedOutput("error", "An error occurred. Check the task logs for more details.")
+		MustNamedOutput("error", err.Error())
+		MustNamedOutput("error", errMsg)
 		os.Exit(1)
 	}
 }
