@@ -43,7 +43,7 @@ func NamedOutput(name string, value interface{}) error {
 
 	header := "airplane_output"
 	if name != "" {
-		header += ":" + name
+		header += fmt.Sprintf(`:"%s"`, name)
 	}
 
 	out, err := json.Marshal(value)
