@@ -1,6 +1,7 @@
 package airplane
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"regexp"
@@ -46,14 +47,26 @@ func NamedOutput(name string, value interface{}) error {
 		header += fmt.Sprintf(`:"%s"`, name)
 	}
 
-	out, err := json.Marshal(value)
+	out, err := encodeOutput(value)
 	if err != nil {
-		return errors.Wrap(err, "marshalling output to JSON")
+		return err
 	}
 
-	fmt.Printf("%s %s\n", header, string(out))
-
+	fmt.Printf("%s %s\n", header, out)
 	return nil
+}
+
+func encodeOutput(value interface{}) (string, error) {
+	buf := &bytes.Buffer{}
+	enc := json.NewEncoder(buf)
+	// We don't want to (or need to) escape e.g. & to \u0026:
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(value); err != nil {
+		return "", errors.Wrap(err, "marshalling output to JSON")
+	}
+	// Get rid of trailing newline: https://github.com/golang/go/issues/37083
+	s := buf.String()
+	return s[:len(s)-1], nil
 }
 
 // MustNamedOutput writes `value` to stdout as an Airplane output. Outputs are
