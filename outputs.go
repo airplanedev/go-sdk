@@ -65,8 +65,8 @@ func encodeOutput(value interface{}) (string, error) {
 		return "", errors.Wrap(err, "marshalling output to JSON")
 	}
 	// Get rid of trailing newline: https://github.com/golang/go/issues/37083
-	s := buf.String()
-	return s[:len(s)-1], nil
+	buf.Truncate(buf.Len() - 1)
+	return buf.String(), nil
 }
 
 // MustNamedOutput writes `value` to stdout as an Airplane output. Outputs are
