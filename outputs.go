@@ -6,8 +6,77 @@ import (
 	"fmt"
 	"regexp"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
+
+func MustSetOutput(value interface{}) {
+	if err := SetOutput(value); err != nil {
+		panic(errors.Wrap(err, "setting output"))
+	}
+}
+
+func SetOutput(value interface{}) error {
+	return SetOutputWithPath(value, "")
+}
+
+func MustSetOutputWithPath(value interface{}, path string) {
+	if err := SetOutputWithPath(value, path); err != nil {
+		panic(errors.Wrapf(err, "setting output %s", path))
+	}
+}
+
+func SetOutputWithPath(value interface{}, path string) error {
+	return writeOutputCommandWithPath("airplane_output_set", value, path)
+}
+
+func MustAppendOutput(value interface{}) {
+	if err := AppendOutput(value); err != nil {
+		panic(errors.Wrap(err, "setting output"))
+	}
+}
+
+func AppendOutput(value interface{}) error {
+	return AppendOutputWithPath(value, "")
+}
+
+func MustAppendOutputWithPath(value interface{}, path string) {
+	if err := AppendOutputWithPath(value, path); err != nil {
+		panic(errors.Wrapf(err, "setting output %s", path))
+	}
+}
+
+func AppendOutputWithPath(value interface{}, path string) error {
+	return writeOutputCommandWithPath("airplane_output_append", value, path)
+}
+
+func writeOutputCommandWithPath(command string, value interface{}, path string) error {
+	header := command
+	if path != "" {
+		header += fmt.Sprintf(`:%s`, path)
+	}
+
+	out, err := encodeOutput(value)
+	if err != nil {
+		return err
+	}
+
+	writeChunkedOutput(fmt.Sprintf("%s %s", header, out))
+	return nil
+}
+
+func writeChunkedOutput(output string) {
+	chunkSize := 8192
+	if len(output) <= chunkSize {
+		fmt.Printf("%s\n", output)
+	} else {
+		chunkKey := uuid.NewString()
+		for i := 0; i < len(output); i += chunkSize {
+			fmt.Printf("airplane_chunk:%s %s\n", chunkKey, output[i:i+chunkSize])
+		}
+		fmt.Printf("airplane_chunk_end:%s\n", chunkKey)
+	}
+}
 
 // Output writes `value` as an Airplane output to stdout. Outputs are
 // separated from your logs and used to provide context structured
