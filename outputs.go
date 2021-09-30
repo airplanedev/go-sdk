@@ -76,7 +76,7 @@ func AppendOutput(value interface{}) error {
 // Docs: https://docs.airplane.dev/reference/outputs
 func MustAppendOutput(value interface{}) {
 	if err := AppendOutput(value); err != nil {
-		panic(errors.Wrap(err, "setting output"))
+		panic(errors.Wrap(err, "appending output"))
 	}
 }
 
