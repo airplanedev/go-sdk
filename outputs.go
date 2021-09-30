@@ -106,7 +106,7 @@ func MustAppendOutputWithPath(value interface{}, path string) {
 	}
 }
 
-func writeOutputCommandWithPath(command string, value interface{}, path string) error {
+func writeOutput(command string, value interface{}, path string) error {
 	header := command
 	if path != "" {
 		header += fmt.Sprintf(`:%s`, path)
