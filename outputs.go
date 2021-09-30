@@ -10,44 +10,100 @@ import (
 	"github.com/pkg/errors"
 )
 
+// SetOutput sets the Airplane task output, writing it to stdout. Outputs are
+// separated from your logs and are used to provide structured context to
+// end-users of your task.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
+func SetOutput(value interface{}) error {
+	return SetOutputWithPath(value, "")
+}
+
+// MustSetOutput sets the Airplane task output, writing it to stdout. Outputs
+// are separated from your logs and are used to provide structured context to
+// end-users of your task.
+//
+// If an error is produced, MustSetOutput will panic.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
 func MustSetOutput(value interface{}) {
 	if err := SetOutput(value); err != nil {
 		panic(errors.Wrap(err, "setting output"))
 	}
 }
 
-func SetOutput(value interface{}) error {
-	return SetOutputWithPath(value, "")
+// SetOutputWithPath sets part of the Airplane task output at a given JSON
+// path, writing it to stdout. Outputs are separated from your logs and are
+// used to provide structured context to end-users of your task.
+//
+// Refer to the docs for a description of the JSON path format.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
+func SetOutputWithPath(value interface{}, path string) error {
+	return writeOutputCommandWithPath("airplane_output_set", value, path)
 }
 
+// MustSetOutputWithPath sets part of the Airplane task output at a given JSON
+// path, writing it to stdout. Outputs are separated from your logs and are
+// used to provide structured context to end-users of your task.
+//
+// If an error is produced, MustSetOutputWithPath will panic.
+//
+// Refer to the docs for a description of the JSON path format.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
 func MustSetOutputWithPath(value interface{}, path string) {
 	if err := SetOutputWithPath(value, path); err != nil {
 		panic(errors.Wrapf(err, "setting output %s", path))
 	}
 }
 
-func SetOutputWithPath(value interface{}, path string) error {
-	return writeOutputCommandWithPath("airplane_output_set", value, path)
+// AppendOutput appends to the Airplane task output, writing it to stdout.
+// Outputs are separated from your logs and are used to provide structured
+// context to end-users of your task.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
+func AppendOutput(value interface{}) error {
+	return AppendOutputWithPath(value, "")
 }
 
+// MustAppendOutput appends to the Airplane task output, writing it to stdout.
+// Outputs are separated from your logs and are used to provide structured
+// context to end-users of your task.
+//
+// If an error is produced, MustAppendOutput will panic.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
 func MustAppendOutput(value interface{}) {
 	if err := AppendOutput(value); err != nil {
 		panic(errors.Wrap(err, "setting output"))
 	}
 }
 
-func AppendOutput(value interface{}) error {
-	return AppendOutputWithPath(value, "")
+// AppendOutputWithPath appends to part of the Airplane task output at a given
+// JSON path, writing it to stdout. Outputs are separated from your logs and are
+// used to provide structured context to end-users of your task.
+//
+// Refer to the docs for a description of the JSON path format.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
+func AppendOutputWithPath(value interface{}, path string) error {
+	return writeOutputCommandWithPath("airplane_output_append", value, path)
 }
 
+// MustAppendOutputWithPath appends to part of the Airplane task output at a
+// given JSON path, writing it to stdout. Outputs are separated from your logs
+// and are used to provide structured context to end-users of your task.
+//
+// If an error is produced, MustAppendOutputWithPath will panic.
+//
+// Refer to the docs for a description of the JSON path format.
+//
+// Docs: https://docs.airplane.dev/reference/outputs
 func MustAppendOutputWithPath(value interface{}, path string) {
 	if err := AppendOutputWithPath(value, path); err != nil {
 		panic(errors.Wrapf(err, "setting output %s", path))
 	}
-}
-
-func AppendOutputWithPath(value interface{}, path string) error {
-	return writeOutputCommandWithPath("airplane_output_append", value, path)
 }
 
 func writeOutputCommandWithPath(command string, value interface{}, path string) error {
@@ -72,7 +128,11 @@ func writeChunkedOutput(output string) {
 	} else {
 		chunkKey := uuid.NewString()
 		for i := 0; i < len(output); i += chunkSize {
-			fmt.Printf("airplane_chunk:%s %s\n", chunkKey, output[i:i+chunkSize])
+			endIdx := i + chunkSize
+			if endIdx > len(output) {
+				endIdx = len(output)
+			}
+			fmt.Printf("airplane_chunk:%s %s\n", chunkKey, output[i:endIdx])
 		}
 		fmt.Printf("airplane_chunk_end:%s\n", chunkKey)
 	}
@@ -81,6 +141,8 @@ func writeChunkedOutput(output string) {
 // Output writes `value` as an Airplane output to stdout. Outputs are
 // separated from your logs and used to provide context structured
 // context to end-users of your task.
+//
+// Deprecated: Please use SetOutput or AppendOutput instead.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func Output(value interface{}) error {
@@ -93,6 +155,8 @@ func Output(value interface{}) error {
 //
 // If an error is produced, MustOutput will panic.
 //
+// Deprecated: Please use MustSetOutput or MustAppendOutput instead.
+//
 // Docs: https://docs.airplane.dev/reference/outputs
 func MustOutput(value interface{}) {
 	if err := Output(value); err != nil {
@@ -104,6 +168,8 @@ func MustOutput(value interface{}) {
 // separated from your logs and used to provide context structured
 // context to end-users of your task. Unlike Output, NamedOutput accepts
 // a `name` which will be used to group separate streams of outputs together.
+//
+// Deprecated: Please use SetOutputWithPath or AppendOutputWithPath instead.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func NamedOutput(name string, value interface{}) error {
@@ -144,6 +210,9 @@ func encodeOutput(value interface{}) (string, error) {
 // a `name` which will be used to group separate streams of outputs together.
 //
 // If an error is produced, MustNamedOutput will panic.
+//
+// Deprecated: Please use MustSetOutputWithPath or MustAppendOutputWithPath
+// instead.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func MustNamedOutput(name string, value interface{}) {
