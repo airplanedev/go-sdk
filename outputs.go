@@ -102,7 +102,7 @@ func AppendOutputWithPath(value interface{}, path string) error {
 // Docs: https://docs.airplane.dev/reference/outputs
 func MustAppendOutputWithPath(value interface{}, path string) {
 	if err := AppendOutputWithPath(value, path); err != nil {
-		panic(errors.Wrapf(err, "setting output %s", path))
+		panic(errors.Wrapf(err, "appending output with path %s", path))
 	}
 }
 
