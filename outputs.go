@@ -40,7 +40,7 @@ func MustSetOutput(value interface{}) {
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func SetOutputWithPath(value interface{}, path string) error {
-	return writeOutputCommandWithPath("airplane_output_set", value, path)
+	return writeOutput("airplane_output_set", value, path)
 }
 
 // MustSetOutputWithPath sets part of the Airplane task output at a given JSON
@@ -88,7 +88,7 @@ func MustAppendOutput(value interface{}) {
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func AppendOutputWithPath(value interface{}, path string) error {
-	return writeOutputCommandWithPath("airplane_output_append", value, path)
+	return writeOutput("airplane_output_append", value, path)
 }
 
 // MustAppendOutputWithPath appends to part of the Airplane task output at a
@@ -122,6 +122,9 @@ func writeOutput(command string, value interface{}, path string) error {
 }
 
 func writeChunkedOutput(output string) {
+	// chunkSize here refers to the size of the user-supplied part of each line.
+	// The actual length of the line is going to be slightly longer, to account
+	// for the airplane_chunk command and the UUID used for the chunk key.
 	chunkSize := 8192
 	if len(output) <= chunkSize {
 		fmt.Printf("%s\n", output)
