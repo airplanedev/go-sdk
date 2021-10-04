@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
-	"strconv"
-	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
@@ -17,7 +15,14 @@ import (
 // Outputs are separated from your logs and are used to provide structured
 // context to end-users of your task.
 //
-// Refer to the docs for a description of the JSON path format.
+// A JSON path should consist of multiple strings and/or integers. A string
+// indicates the value associated with a key in a JSON object, and an integer
+// indicates the index of an element in a (0-indexed) JSON array. For instance,
+// calling
+//  SetOutput(4, "test", 3)
+// would update the 3 to a 4 in the following JSON object: 
+//  {"test": [0, 1, 2, 3]}
+
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func SetOutput(value interface{}, path ...interface{}) error {
@@ -29,7 +34,13 @@ func SetOutput(value interface{}, path ...interface{}) error {
 // Outputs are separated from your logs and are used to provide structured
 // context to end-users of your task.
 //
-// Refer to the docs for a description of the JSON path format.
+// A JSON path should consist of multiple strings and/or integers. A string
+// indicates the value associated with a key in a JSON object, and an integer
+// indicates the index of an element in a (0-indexed) JSON array. For instance
+// calling
+//  MustSetOutput(4, "test", 3)
+// would update the 3 to a 4 in the following JSON object: 
+//  {"test": [0, 1, 2, 3]}
 //
 // If an error is produced, MustSetOutput will panic.
 //
@@ -45,7 +56,13 @@ func MustSetOutput(value interface{}, path ...interface{}) {
 // Outputs are separated from your logs and are used to provide structured
 // context to end-users of your task.
 //
-// Refer to the docs for a description of the JSON path format.
+// A JSON path should consist of multiple strings and/or integers. A string
+// indicates the value associated with a key in a JSON object, and an integer
+// indicates the index of an element in a (0-indexed) JSON array. For instance
+// calling
+//  AppendOutput(4, "test", 3)
+// would append a 4 to the array containing a 3 in the following JSON object: 
+//  {"test": [[0], [1], [2], [3]]}
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func AppendOutput(value interface{}, path... interface{}) error {
@@ -57,7 +74,13 @@ func AppendOutput(value interface{}, path... interface{}) error {
 // Outputs are separated from your logs and are used to provide structured
 // context to end-users of your task.
 //
-// Refer to the docs for a description of the JSON path format.
+// A JSON path should consist of multiple strings and/or integers. A string
+// indicates the value associated with a key in a JSON object, and an integer
+// indicates the index of an element in a (0-indexed) JSON array. For instance
+// calling
+//  MustAppendOutput(4, "test", 3)
+// would append a 4 to the array containing a 3 in the following JSON object: 
+//  {"test": [[0], [1], [2], [3]]}
 //
 // If an error is produced, MustAppendOutput will panic.
 //
@@ -67,39 +90,6 @@ func MustAppendOutput(value interface{}, path ...interface{}) {
 		panic(errors.Wrap(err, "appending output"))
 	}
 }
-
-var canDot = regexp.MustCompile(`^\w+$`)
-// toJS converts a path to a JSONPath-style string representation.
-//
-// For example:
-//   ["foo", 0, "bar"] -> "foo[0].bar"
-//
-// The produced value can be parsed by FromJS and will produce an identical path.
-func toJS(path ...interface{}) string {
-  var b strings.Builder
-  for _, c := range path {
-    switch v := c.(type) {
-    case string:
-      if canDot.MatchString(v) {
-        if b.Len() > 0 {
-          b.WriteRune('.')
-        }
-        b.WriteString(v)
-      } else {
-        b.WriteRune('[')
-        b.WriteString(strconv.Quote(v))
-        b.WriteRune(']')
-      }
-    case int:
-      b.WriteRune('[')
-      b.WriteString(strconv.FormatInt(int64(v), 10))
-      b.WriteRune(']')
-    }
-  }
-
-  return b.String()
-}
-
 
 func writeOutput(command string, value interface{}, path ...interface{}) error {
 	header := command
@@ -168,7 +158,7 @@ func MustOutput(value interface{}) {
 // context to end-users of your task. Unlike Output, NamedOutput accepts
 // a `name` which will be used to group separate streams of outputs together.
 //
-// Deprecated: Please use SetOutputWithPath or AppendOutputWithPath instead.
+// Deprecated: Please use SetOutput or AppendOutput instead.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func NamedOutput(name string, value interface{}) error {
@@ -210,8 +200,7 @@ func encodeOutput(value interface{}) (string, error) {
 //
 // If an error is produced, MustNamedOutput will panic.
 //
-// Deprecated: Please use MustSetOutputWithPath or MustAppendOutputWithPath
-// instead.
+// Deprecated: Please use MustSetOutput or MustAppendOutput instead.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
 func MustNamedOutput(name string, value interface{}) {
