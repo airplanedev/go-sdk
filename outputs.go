@@ -5,111 +5,107 @@ import (
 	"encoding/json"
 	"fmt"
 	"regexp"
+	"strconv"
+	"strings"
 
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 )
 
-// SetOutput sets the Airplane task output, writing it to stdout. Outputs are
-// separated from your logs and are used to provide structured context to
-// end-users of your task.
+// SetOutput sets the Airplane task output, writing it to stdout.
+// Optionally can be provided a JSON path to only set a part of the output.
+// Outputs are separated from your logs and are used to provide structured
+// context to end-users of your task.
+//
+// Refer to the docs for a description of the JSON path format.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
-func SetOutput(value interface{}) error {
-	return SetOutputWithPath(value, "")
+func SetOutput(value interface{}, path ...interface{}) error {
+	return writeOutput("airplane_output_set", value, path...)
 }
 
-// MustSetOutput sets the Airplane task output, writing it to stdout. Outputs
-// are separated from your logs and are used to provide structured context to
-// end-users of your task.
+// MustSetOutput sets the Airplane task output, writing it to stdout. 
+// Optionally can be provided a JSON path to only set a part of the output.
+// Outputs are separated from your logs and are used to provide structured
+// context to end-users of your task.
+//
+// Refer to the docs for a description of the JSON path format.
 //
 // If an error is produced, MustSetOutput will panic.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
-func MustSetOutput(value interface{}) {
-	if err := SetOutput(value); err != nil {
+func MustSetOutput(value interface{}, path ...interface{}) {
+	if err := SetOutput(value, path...); err != nil {
 		panic(errors.Wrap(err, "setting output"))
 	}
 }
 
-// SetOutputWithPath sets part of the Airplane task output at a given JSON
-// path, writing it to stdout. Outputs are separated from your logs and are
-// used to provide structured context to end-users of your task.
-//
-// Refer to the docs for a description of the JSON path format.
-//
-// Docs: https://docs.airplane.dev/reference/outputs
-func SetOutputWithPath(value interface{}, path string) error {
-	return writeOutput("airplane_output_set", value, path)
-}
-
-// MustSetOutputWithPath sets part of the Airplane task output at a given JSON
-// path, writing it to stdout. Outputs are separated from your logs and are
-// used to provide structured context to end-users of your task.
-//
-// If an error is produced, MustSetOutputWithPath will panic.
-//
-// Refer to the docs for a description of the JSON path format.
-//
-// Docs: https://docs.airplane.dev/reference/outputs
-func MustSetOutputWithPath(value interface{}, path string) {
-	if err := SetOutputWithPath(value, path); err != nil {
-		panic(errors.Wrapf(err, "setting output %s", path))
-	}
-}
-
 // AppendOutput appends to the Airplane task output, writing it to stdout.
+// Optionally can be provided a JSON path to only append to part of the output.
 // Outputs are separated from your logs and are used to provide structured
 // context to end-users of your task.
 //
+// Refer to the docs for a description of the JSON path format.
+//
 // Docs: https://docs.airplane.dev/reference/outputs
-func AppendOutput(value interface{}) error {
-	return AppendOutputWithPath(value, "")
+func AppendOutput(value interface{}, path... interface{}) error {
+	return writeOutput("airplane_output_append", value, path...)
 }
 
 // MustAppendOutput appends to the Airplane task output, writing it to stdout.
+// Optionally can be provided a JSON path to only append to part of the output.
 // Outputs are separated from your logs and are used to provide structured
 // context to end-users of your task.
+//
+// Refer to the docs for a description of the JSON path format.
 //
 // If an error is produced, MustAppendOutput will panic.
 //
 // Docs: https://docs.airplane.dev/reference/outputs
-func MustAppendOutput(value interface{}) {
-	if err := AppendOutput(value); err != nil {
+func MustAppendOutput(value interface{}, path ...interface{}) {
+	if err := AppendOutput(value, path...); err != nil {
 		panic(errors.Wrap(err, "appending output"))
 	}
 }
 
-// AppendOutputWithPath appends to part of the Airplane task output at a given
-// JSON path, writing it to stdout. Outputs are separated from your logs and are
-// used to provide structured context to end-users of your task.
+var canDot = regexp.MustCompile(`^\w+$`)
+// toJS converts a path to a JSONPath-style string representation.
 //
-// Refer to the docs for a description of the JSON path format.
+// For example:
+//   ["foo", 0, "bar"] -> "foo[0].bar"
 //
-// Docs: https://docs.airplane.dev/reference/outputs
-func AppendOutputWithPath(value interface{}, path string) error {
-	return writeOutput("airplane_output_append", value, path)
+// The produced value can be parsed by FromJS and will produce an identical path.
+func toJS(path ...interface{}) string {
+  var b strings.Builder
+  for _, c := range path {
+    switch v := c.(type) {
+    case string:
+      if canDot.MatchString(v) {
+        if b.Len() > 0 {
+          b.WriteRune('.')
+        }
+        b.WriteString(v)
+      } else {
+        b.WriteRune('[')
+        b.WriteString(strconv.Quote(v))
+        b.WriteRune(']')
+      }
+    case int:
+      b.WriteRune('[')
+      b.WriteString(strconv.FormatInt(int64(v), 10))
+      b.WriteRune(']')
+    }
+  }
+
+  return b.String()
 }
 
-// MustAppendOutputWithPath appends to part of the Airplane task output at a
-// given JSON path, writing it to stdout. Outputs are separated from your logs
-// and are used to provide structured context to end-users of your task.
-//
-// If an error is produced, MustAppendOutputWithPath will panic.
-//
-// Refer to the docs for a description of the JSON path format.
-//
-// Docs: https://docs.airplane.dev/reference/outputs
-func MustAppendOutputWithPath(value interface{}, path string) {
-	if err := AppendOutputWithPath(value, path); err != nil {
-		panic(errors.Wrapf(err, "appending output with path %s", path))
-	}
-}
 
-func writeOutput(command string, value interface{}, path string) error {
+func writeOutput(command string, value interface{}, path ...interface{}) error {
 	header := command
-	if path != "" {
-		header += fmt.Sprintf(`:%s`, path)
+	jsPath := toJS(path...)
+	if jsPath != "" {
+		header += fmt.Sprintf(`:%s`, jsPath)
 	}
 
 	out, err := encodeOutput(value)
