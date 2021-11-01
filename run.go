@@ -27,9 +27,9 @@ func Run(f func(ctx context.Context) error) {
 		if r := recover(); r != nil {
 			fmt.Fprintf(os.Stderr, "%+v\n", r)
 			if err, ok := r.(error); ok {
-				MustNamedOutput("error", err.Error())
+				MustSetOutput(err.Error(), "error")
 			} else {
-				MustNamedOutput("error", fmt.Sprintf("%s", r))
+				MustSetOutput(fmt.Sprintf("%s", r), "error")
 			}
 			os.Exit(1)
 		}
@@ -37,7 +37,7 @@ func Run(f func(ctx context.Context) error) {
 
 	if err := f(ctx); err != nil {
 		fmt.Fprintf(os.Stderr, "%+v\n", err)
-		MustNamedOutput("error", err.Error())
+		MustSetOutput(err.Error(), "error")
 		os.Exit(1)
 	}
 }
