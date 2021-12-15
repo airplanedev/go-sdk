@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"os"
+	"runtime/debug"
 	"time"
 
 	// TODO: move this into a separate Go package.
@@ -25,7 +26,7 @@ func Run(f func(ctx context.Context) error) {
 	// Handle uncaught panics.
 	defer func() {
 		if r := recover(); r != nil {
-			fmt.Fprintf(os.Stderr, "%+v\n", r)
+			fmt.Fprintf(os.Stderr, "%+v\n%s\n", r, debug.Stack())
 			if err, ok := r.(error); ok {
 				MustSetOutput(err.Error(), "error")
 			} else {
