@@ -7,8 +7,7 @@ import (
 	"runtime/debug"
 	"time"
 
-	// TODO: move this into a separate Go package.
-	"github.com/airplanedev/cli/pkg/trap"
+	"github.com/airplanedev/trap"
 )
 
 func init() {
